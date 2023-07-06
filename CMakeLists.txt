@@ -223,3 +223,9 @@ target_link_libraries(kuka_libkine lapack)
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
+add_executable(project src/project.cpp ${KUKA_SRC_FILES} ${KUKA_H_FILES})
+target_link_libraries(project
+ ${catkin_LIBRARIES}
+ kuka_libkine
+)
+
