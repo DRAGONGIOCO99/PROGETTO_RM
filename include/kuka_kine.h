@@ -25,9 +25,6 @@ class kuka_robot
         Matrix_7_4 DH_table = Matrix_7_4::Zero();
         
         
-        
-        
-        
         public:
 
         //constructor

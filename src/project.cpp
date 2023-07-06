@@ -56,10 +56,10 @@ int main(int argc, char** argv)
 
         Te = kuka.Te(q);
 
-        x = Te.block(0,3,3,1);
+        //x = Te.block(0,3,3,1);
 
-        cout << "x" << endl;
-        cout << x << endl;
+        cout << "Te" << endl;
+        cout << Te << endl;
 
         ros::spinOnce();
         rate.sleep();
