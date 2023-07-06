@@ -15,6 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
 )
 
+find_package(Eigen3 REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -122,6 +124,20 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+
+set(KUKA_SRC_FILES
+	src/kuka_kine.cpp  ## creo una libreria per la classe
+)
+
+set(KUKA_H_FILES
+	include/kuka_kine.h
+)
+
+add_library(kuka_libkine ${KUKA_SRC_FILES})
+target_link_libraries(kuka_libkine lapack)
+
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/PROGETTO_RM.cpp
@@ -206,3 +222,4 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
