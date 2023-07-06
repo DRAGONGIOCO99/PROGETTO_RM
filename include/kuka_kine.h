@@ -35,6 +35,6 @@ class kuka_robot
         Matrix4d Te(Vector7d q);
 
         //Jacobian
-        Matrix6d J(Vector7d q);
+        Matrix6d jacobian(Vector7d q);
         
 };

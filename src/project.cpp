@@ -11,7 +11,7 @@
 #include <sstream>
 #include <stdio.h>
 
-#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/rl_ros1/src/PROGETTO_RM/include/kuka_kine.h"
 
 using namespace Eigen;
 
@@ -55,12 +55,14 @@ int main(int argc, char** argv)
         }
 
         Te = kuka.Te(q);
-
-        //x = Te.block(0,3,3,1);
-
+        J=kuka.jacobian(q);
+        
         cout << "Te" << endl;
         cout << Te << endl;
-
+        cout << "Jacobian" << endl;
+        cout << J << endl;
+   
+        
         ros::spinOnce();
         rate.sleep();
 

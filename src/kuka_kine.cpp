@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/rl_ros1/src/PROGETTO_RM/include/kuka_kine.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979
@@ -114,8 +114,9 @@ Matrix4d kuka_robot::Te(Vector7d q){
 }
 
 
-Matrix6d kuka_robot::J(Vector7d q){
+Matrix6d kuka_robot::jacobian(Vector7d q){
     Matrix4d Temp = Matrix4d::Zero();
+    Matrix4d A0 = Matrix4d::Zero();
     Matrix6d J = Matrix6d::Zero();
     Eigen::Matrix<double, 3, 7> p=Eigen::Matrix<double, 3, 7>::Zero();
     Eigen::Matrix<double, 3, 7> z=Eigen::Matrix<double, 3, 7>::Zero();
@@ -159,12 +160,35 @@ Matrix6d kuka_robot::J(Vector7d q){
         Homogeneous[i](3,1)  = 0;
         Homogeneous[i](3,2)  = 0;
         Homogeneous[i](3,3)  = 1;
-
-        
-
     }
 
+    A0=Homogeneous[0];
 
+    for (int i=1; i<7 ;i++){
+        
+        p(0,i)=A0(0,3); // estraggo vettore p_i
+        p(1,i)=A0(1,3);
+        p(2,i)=A0(2,3);
+
+        z(0,i)=A0(0,2); // estraggo vettore z_i
+        z(1,i)=A0(1,2);
+        z(2,i)=A0(2,2);
+    
+        Temp=Homogeneous[i];
+        A0= A0*Temp;
+    }
+
+J.col(0).segment(0,2)=z0.cross(p.col(6)-p0);
+J.col(0).segment(3,5)=z0;
+
+    for (int i=1; i<7 ;i++){
+        
+        J.col(i).segment(0,2)=(z.col(i-1)).cross(p.col(6)-p.col(i-1));
+        J.col(i).segment(3,5)=z.col(i-1);
+    
+    }
+
+return J;
 
 
 }
