@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <math.h>
-#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/rl_ros1/src/PROGETTO_RM/include/kuka_kine.h"
 
 #ifndef M_PI
 #define M_PI 3.14159265358979
