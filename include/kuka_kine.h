@@ -14,6 +14,7 @@ using namespace Eigen;
 using namespace std;
 
 typedef Eigen::Matrix<double, 7, 1> Vector7d;
+typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 6, 7> Matrix6d;
 typedef Eigen::Matrix<double, 7, 4> Matrix_7_4;
 //typedef Eigen::Matrix<double, 4, 1> Vector4d;
