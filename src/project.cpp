@@ -14,6 +14,7 @@
 #include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
 
 using namespace Eigen;
+#define n_rig 
 
 
 std::vector<double> q_std(7,1); //variabili globali per copiare i valori del ros msg
@@ -107,20 +108,25 @@ int main(int argc, char** argv)
         cout << "Jacobian" << endl;
         cout << J << endl;*/
 
-        q_data[0] = -0.46;
+       /*q_data[0] = -0.46;
         q_data[1] = 0.33;
         q_data[2] = -0.51;
         q_data[3] = -1.5;
         q_data[4] = 0.16;
         q_data[5] = 1.33;
-        q_data[6] = -0.99;
+        q_data[6] = -0.99;*/
 
-        Ted = kuka.Te(q_data);
-        xd = Ted.block(0,3,3,1);
+        //Ted = kuka.Te(q_data);
+        xd <<0.5,0,0.5;
         x = Te.block(0,3,3,1);
 
        cout << "x" << endl;
         cout << x << endl;
+
+        cout << "TE " << endl;
+        cout << Te <<endl;
+        cout << " Re "<<endl;
+        cout << Te.block(0,0,3,3) <<endl;
 
         cout << "xd" << endl;
         cout << xd << endl;
@@ -135,6 +141,9 @@ int main(int argc, char** argv)
         q_dot = J_p_inv*(dxd + K*e) + (Id - J_p_inv*J_p)*dq0;
 
         q = q + q_dot*0.01;
+
+        cout<< "q "<<endl;
+        cout<< q <<endl;
 
         for(int i=0; i<7; i++){
             q_cmd[i].data = q[i];
