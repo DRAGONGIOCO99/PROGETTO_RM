@@ -53,16 +53,16 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     ros::Rate rate(300);
 
-    ros::Subscriber q_sub = nh.subscribe("/iiwa/joint_states",1000, q_callback);
+    ros::Subscriber q_sub = nh.subscribe("/iiwa/joint_states",1, q_callback);
     ros::Publisher joint_pos_cmd[7];
 
-    joint_pos_cmd[0] = nh.advertise<std_msgs::Float64>("/iiwa/joint1_position_controller/command", 1000);
-    joint_pos_cmd[1] = nh.advertise<std_msgs::Float64>("/iiwa/joint2_position_controller/command", 1000);
-    joint_pos_cmd[2] = nh.advertise<std_msgs::Float64>("/iiwa/joint3_position_controller/command", 1000);
-    joint_pos_cmd[3] = nh.advertise<std_msgs::Float64>("/iiwa/joint4_position_controller/command", 1000);
-    joint_pos_cmd[4] = nh.advertise<std_msgs::Float64>("/iiwa/joint5_position_controller/command", 1000);
-    joint_pos_cmd[5] = nh.advertise<std_msgs::Float64>("/iiwa/joint6_position_controller/command", 1000);
-    joint_pos_cmd[6] = nh.advertise<std_msgs::Float64>("/iiwa/joint7_position_controller/command", 1000);
+    joint_pos_cmd[0] = nh.advertise<std_msgs::Float64>("/iiwa/joint1_position_controller/command", 1);
+    joint_pos_cmd[1] = nh.advertise<std_msgs::Float64>("/iiwa/joint2_position_controller/command", 1);
+    joint_pos_cmd[2] = nh.advertise<std_msgs::Float64>("/iiwa/joint3_position_controller/command", 1);
+    joint_pos_cmd[3] = nh.advertise<std_msgs::Float64>("/iiwa/joint4_position_controller/command", 1);
+    joint_pos_cmd[4] = nh.advertise<std_msgs::Float64>("/iiwa/joint5_position_controller/command", 1);
+    joint_pos_cmd[5] = nh.advertise<std_msgs::Float64>("/iiwa/joint6_position_controller/command", 1);
+    joint_pos_cmd[6] = nh.advertise<std_msgs::Float64>("/iiwa/joint7_position_controller/command", 1);
 
 
     std::vector<Vector3d> Pd(n_rigXD);
@@ -101,19 +101,20 @@ int main(int argc, char** argv)
     Vector7d q_dot = Vector7d::Zero();
     Vector3d dxd = Vector3d::Zero();
     Eigen::Matrix<double, 7, 7> Id = MatrixXd::Identity(7,7);
-    Eigen::Matrix<double, 6, 6> K = MatrixXd::Identity(6,6);
+    Eigen::Matrix<double, 6, 6> K;
+    K.setZero();
     Vector7d dq0 = Vector7d::Zero();
 
     Vector7d q_max = Vector7d::Zero();
     Vector7d q_min = Vector7d::Zero();
     
-    double Kp = 50;
+    double Kp =200;
     K(0,0) = 100;
     K(1,1) = 100;
     K(2,2) = 100;
-    K(3,3) = 120;
-    K(4,4) = 120;
-    K(5,5) = 120;
+    K(3,3) = 100;
+    K(4,4) = 100;
+    K(5,5) = 100;
 
     std_msgs::Float64 q_cmd[7];
 
@@ -125,15 +126,12 @@ int main(int argc, char** argv)
     q_data[5] = 0.88287;
     q_data[6] = -0.000148029;
 
-    for(int j=0;j<10 ; j++)
-    {
+  
     for(int i=0; i<7; i++){
             q_cmd[i].data = q_data[i];
             joint_pos_cmd[i].publish(q_cmd[i]);
      }
-     rate.sleep();
-     
-    }
+
     cout <<"Home configuration setted\n"<<endl;
 
     ifstream file1("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd.txt",ios::in);
@@ -304,18 +302,26 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
     kuka_robot kuka; 
     int p=0;
+
+    
     cout << "Press enter to start the trajectory execution" << endl;
 	string ln;
 	getline(cin, ln);
+
+
     while(ros::ok()) {
 
         if (p<n_rigXD){
 
-        
+            ros::spinOnce();
 
             if(q_std.size() > 0){ //solo quando effettivamente mi arrivano valori riempi
                 q << q_std[0], q_std[1], q_std[2], q_std[3], q_std[4], q_std[5], q_std[6];
             }
+
+            
+            cout<< "q" <<endl;
+            cout<< q <<endl;
 
             
             xd(0)=Pd[p](0);
@@ -408,7 +414,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             dot_xd(5) = w_d(2);
 
             //q_dot = J_p_inv*(dxd + Kp*ep); //+ (Id - J_p_inv*J_p)*dq0;
-            q_dot = J_inv*(dot_xd + K*e);
+            q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
 
 
             q = q + q_dot*0.001;
@@ -416,19 +422,34 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout<< "q "<<endl;
             cout<< q <<endl;
 
-            //for(int j=0;j<10 ; j++)
-            //{
+
+            ofstream file1;
+            file1.open("ERRORE_CLIK_pos.txt",ios::out|ios::app);
+            if(file1.is_open()){
+                for(int i=0;i<3;i++){
+                    file1<<ep(i);
+                    file1<<" ";}
+                file1<<"\n";
+                file1.close();}
+            else cout<<"impossibile aprire file";
+
+            ofstream file2;
+            file2.open("ERRORE_CLIK_or.txt",ios::out|ios::app);
+            if(file2.is_open()){
+                for(int i=0;i<3;i++){
+                    file2<<eo(i);
+                    file2<<" ";}
+                file2<<"\n";
+                file2.close();}
+            else cout<<"impossibile aprire file";
+
+
+                
             for(int i=0; i<7; i++){
                 q_cmd[i].data = q[i];
                 joint_pos_cmd[i].publish(q_cmd[i]);
             }
-            //}
-
-            /*if (e.norm()<0.005){
-                stop = 0;
-            }*/
-            
-            ros::spinOnce();
+               
             rate.sleep();
             p++;
         }
