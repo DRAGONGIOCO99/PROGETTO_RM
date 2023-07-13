@@ -14,7 +14,7 @@
 #include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
 
 using namespace Eigen;
-#define n_rigXD 28000
+#define n_rigXD 2800
 #define num_traj 7
 #define n_rigR 12003
 #define n_col 3
@@ -51,12 +51,12 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "kuka");
 
     ros::NodeHandle nh;
-    ros::Rate rate(300);
+    ros::Rate rate(50);
 
     ros::Subscriber q_sub = nh.subscribe("/iiwa/joint_states",1, q_callback);
     ros::Publisher joint_pos_cmd[7];
 
-    joint_pos_cmd[0] = nh.advertise<std_msgs::Float64>("/iiwa/joint1_position_controller/command", 1);
+    joint_pos_cmd[0] = nh.advertise<std_msgs::Float64>("/iiwa/joint1_position_controller/command", 1); 
     joint_pos_cmd[1] = nh.advertise<std_msgs::Float64>("/iiwa/joint2_position_controller/command", 1);
     joint_pos_cmd[2] = nh.advertise<std_msgs::Float64>("/iiwa/joint3_position_controller/command", 1);
     joint_pos_cmd[3] = nh.advertise<std_msgs::Float64>("/iiwa/joint4_position_controller/command", 1);
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     Vector7d q_max = Vector7d::Zero();
     Vector7d q_min = Vector7d::Zero();
     
-    double Kp =200;
+    double Kp =10;
     K(0,0) = 100;
     K(1,1) = 100;
     K(2,2) = 100;
@@ -126,11 +126,13 @@ int main(int argc, char** argv)
     q_data[5] = 0.88287;
     q_data[6] = -0.000148029;
 
-  
+    for (int j=0; j<20; j++){
     for(int i=0; i<7; i++){
             q_cmd[i].data = q_data[i];
             joint_pos_cmd[i].publish(q_cmd[i]);
      }
+     rate.sleep();
+    }
 
     cout <<"Home configuration setted\n"<<endl;
 
@@ -165,7 +167,7 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
        }
     }
     
-    
+    /*
     ifstream file3("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_01d.txt",ios::in);
     if(!file3){
     cout<<"errore"<<endl;
@@ -180,6 +182,9 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
           }
        }
     }
+    */
+
+    /*
     
     ifstream file4("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_12d.txt",ios::in);
     if(!file4){
@@ -197,6 +202,9 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
        }
     }
     
+    */
+
+    /*
  ifstream file5("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_23d.txt",ios::in);
     if(!file5){
     cout<<"errore"<<endl;
@@ -212,6 +220,10 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
   
        }
     }
+
+    */
+
+    /*
 
 for(int i=3*n_rigR/3;i<4*n_rigR/3;i++){
             Rd[i] =Rd[3*n_rigR/3-1];
@@ -232,11 +244,15 @@ ifstream file6("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_45d.txt",ios::in);
   
        }
     }
+
+    */
   
- 
+ /*
 for(int i=5*n_rigR/3;i<7*n_rigR/3;i++){
             Rd[i] =Rd[5*n_rigR/3-1];
           }
+
+
 
 ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
     if(!file7){
@@ -297,7 +313,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout << wd[i]<<endl;
           
           }
-
+*/
 
 
     kuka_robot kuka; 
@@ -332,31 +348,26 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             dxd(1)=dot_Pd[p](1);
             dxd(2)=dot_Pd[p](2);
 
+            /*
             R_d = Rd[p];
             cout << "R_d" <<endl;
             cout << R_d <<endl;
             w_d(0) = wd[p](0);
             w_d(1) = wd[p](1);
             w_d(2) = wd[p](2);
+            */
             
             Te = kuka.Te(q);
             J = kuka.jacobian(q);
             J_p = J.block(0,0,3,7);
-            //J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
-            J_inv = (J.transpose())*(J*J.transpose()).inverse();
+            J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
+            //J_inv = (J.transpose())*(J*J.transpose()).inverse();
             
             /*cout << "Te" << endl;
             cout << Te << endl;
             cout << "Jacobian" << endl;
             cout << J << endl;*/
 
-            /*q_data[0] = -0.46;
-            q_data[1] = 0.33;
-            q_data[2] = -0.51;
-            q_data[3] = -1.5;
-            q_data[4] = 0.16;
-            q_data[5] = 1.33;
-            q_data[6] = -0.99;*/
 
             //Ted = kuka.Te(q_data);
             //xd <<0.5,0,0.5;
@@ -366,12 +377,13 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout << "R_e" <<endl;
             cout << R_e <<endl;
 
+            /*
             // Quaternion extraction
             Q_d = kuka.Rot2Quat(R_d);
             Q_e = kuka.Rot2Quat(R_e);
 
             eo=kuka.QuatError(Q_d, Q_e);
-
+            */
             cout << "x" << endl;
             cout << xe << endl;
 
@@ -388,9 +400,10 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
            cout << "ep" << endl;
             cout << ep << endl;
 
+            /*
             cout << "\neo"<<endl;
             cout << eo << endl; 
-
+            */
             q_max << 2.69706, 2.0944, 2.69706, 2.0944, 2.69706, 2.0944, 3.05433;
             q_min << -2.69706, -2.0944, -2.69706, -2.0944, -2.69706, -2.0944, -3.05433;
 
@@ -399,25 +412,28 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             e(0) = ep(0);
             e(1) = ep(1);
             e(2) = ep(2);
+            /*
             e(3) = eo(0);
             e(4) = eo(1);
             e(5) = eo(2);
-
+            
             cout<< "e "<< endl;
             cout << e<<endl;
-
+            */
             dot_xd(0) = dxd(0);
             dot_xd(1) = dxd(1);
             dot_xd(2) = dxd(2);
+            /*
             dot_xd(3) = w_d(0);
             dot_xd(4) = w_d(1);
             dot_xd(5) = w_d(2);
+            */
 
-            //q_dot = J_p_inv*(dxd + Kp*ep); //+ (Id - J_p_inv*J_p)*dq0;
-            q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
+            q_dot = J_p_inv*(dxd + Kp*ep); //+ (Id - J_p_inv*J_p)*dq0;
+            //q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
 
 
-            q = q + q_dot*0.001;
+            q = q + q_dot*0.01;
 
             cout<< "q "<<endl;
             cout<< q <<endl;
@@ -433,6 +449,29 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
                 file1.close();}
             else cout<<"impossibile aprire file";
 
+                        ofstream file2;
+            file2.open("xe.txt",ios::out|ios::app);
+            if(file2.is_open()){
+                for(int i=0;i<3;i++){
+                    file2<<xe(i);
+                    file2<<" ";}
+                file2<<"\n";
+                file2.close();}
+            else cout<<"impossibile aprire file";
+
+
+            ofstream file3;
+            file3.open("xd.txt",ios::out|ios::app);
+            if(file3.is_open()){
+                for(int i=0;i<3;i++){
+                    file3<<xd(i);
+                    file3<<" ";}
+                file3<<"\n";
+                file3.close();}
+            else cout<<"impossibile aprire file";
+
+
+            /*
             ofstream file2;
             file2.open("ERRORE_CLIK_or.txt",ios::out|ios::app);
             if(file2.is_open()){
@@ -443,7 +482,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
                 file2.close();}
             else cout<<"impossibile aprire file";
 
-
+            */
                 
             for(int i=0; i<7; i++){
                 q_cmd[i].data = q[i];
