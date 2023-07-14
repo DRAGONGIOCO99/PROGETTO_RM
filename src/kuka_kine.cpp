@@ -282,3 +282,31 @@ Vector3d kuka_robot::QuatError(Vector4d Qd, Vector4d Qe){
 
 
 }
+
+float kuka_robot::manip(Matrix6d J){
+
+    float w = 0.0;
+    float w_not_sq= 0.0;
+
+    w_not_sq=(J*J.transpose()).determinant();
+
+    w=sqrt(w_not_sq);
+
+    return w;
+
+}
+
+float kuka_robot::manip_Jpos (Eigen::Matrix<double, 3, 7> Jp ){
+
+    float w = 0.0;
+    float w_not_sq= 0.0;
+
+    w_not_sq=(Jp*Jp.transpose()).determinant();
+
+    w=sqrt(w_not_sq);
+
+    return w;
+
+
+
+}

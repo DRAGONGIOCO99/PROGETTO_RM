@@ -44,5 +44,9 @@ class kuka_robot
 
         //Quaternion error
         Vector3d QuatError(Vector4d Qd, Vector4d Qe);
+
+        float manip (Matrix6d J);
+
+        float manip_Jpos (Eigen::Matrix<double, 3, 7> Jp );
         
 };

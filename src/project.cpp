@@ -32,7 +32,7 @@ Vector3d error_p (Vector3d &x, Vector3d &xd)
     return error;
 }
 
-Vector7d dq0_limits(Vector7d &q, Vector7d &q_max, Vector7d &q_min)
+/*Vector7d dq0_limits(Vector7d &q, Vector7d &q_max, Vector7d &q_min)
 {
     Vector7d w = Vector7d::Zero();
 
@@ -42,7 +42,7 @@ Vector7d dq0_limits(Vector7d &q, Vector7d &q_max, Vector7d &q_min)
 
     return w;
 
-}
+}*/
 
 
 
@@ -78,6 +78,9 @@ int main(int argc, char** argv)
     Eigen::Matrix<double, 3, 7> J_p;
     J_p.setZero();
 
+    Eigen::Matrix<double, 3, 7> J_p_inc;
+    J_p_inc.setZero();
+
     Eigen::Matrix<double, 7, 3> J_p_inv;
     J_p_inv.setZero();
    
@@ -94,6 +97,10 @@ int main(int argc, char** argv)
     Vector3d ep = Vector3d::Zero();
     Vector3d eo = Vector3d::Zero();
 
+    Vector3d z = Vector3d::Zero();
+    Vector3d dz = Vector3d::Zero();
+    Vector3d ddz = Vector3d::Zero();
+
     Vector6d e = Vector6d::Zero();
     Vector6d dot_xd = Vector6d::Zero();
     Vector4d Q_d = Vector4d::Zero();
@@ -104,11 +111,39 @@ int main(int argc, char** argv)
     Eigen::Matrix<double, 6, 6> K;
     K.setZero();
     Vector7d dq0 = Vector7d::Zero();
+    Vector7d grad_w = Vector7d::Zero();
 
-    Vector7d q_max = Vector7d::Zero();
-    Vector7d q_min = Vector7d::Zero();
+    Vector7d q_inc = Vector7d::Zero();
     
-    double Kp =10;
+    Vector3d he = Vector3d::Zero();
+
+    // Forza costante;
+    he<<5.0,0,0;
+
+    // Parametri controllo impedenza
+
+    Eigen::Matrix<double, 3, 3> Md = MatrixXd::Identity(3,3);
+    //DiagonalMatrix<float,3,3> Md;
+   
+    
+    Matrix<double,3,3> invMd;
+    invMd = Md.inverse();
+    
+    
+    Eigen::Matrix<double, 3, 3> Kd = MatrixXd::Identity(3,3);
+    Kd(0,0)=30;
+    Kd(1,1)=10;
+    Kd(2,2)=10;
+
+    Eigen::Matrix<double, 3, 3> Kpa = MatrixXd::Identity(3,3);
+    Kpa(0,0)=0.2;
+    Kpa(1,1)=20;
+    Kpa(2,2)=20;
+
+    float w_inc = 0.0;
+    float w_now =0.0;
+    double Kp = 20;
+    double k0 = 5;
     K(0,0) = 100;
     K(1,1) = 100;
     K(2,2) = 100;
@@ -362,7 +397,23 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             J_p = J.block(0,0,3,7);
             J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
             //J_inv = (J.transpose())*(J*J.transpose()).inverse();
-            
+            w_now=kuka.manip_Jpos(J_p);
+
+            for (int k=0 ; k<7; k++){
+                q_inc=q;
+                q_inc(k) = q_inc(k)+0.01;
+                J = kuka.jacobian(q_inc);
+                J_p_inc = J.block(0,0,3,7);
+                w_inc = kuka.manip_Jpos(J_p_inc);
+                grad_w(k)=(w_inc-w_now)/0.01;
+            }
+    
+            //cout<< "w" <<endl;
+            //cout<<w_now<<endl;
+            dq0 = k0*grad_w;
+
+            cout <<" dq0 "<<endl;
+            cout << dq0 <<endl;
             /*cout << "Te" << endl;
             cout << Te << endl;
             cout << "Jacobian" << endl;
@@ -400,18 +451,25 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
            cout << "ep" << endl;
             cout << ep << endl;
 
+            z=ep;
+
+            ddz=invMd*(he-Kd*dz-Kpa*z);
+
+            dz=dz+0.01*ddz;
+            z = z +0.01*dz;
+
             /*
             cout << "\neo"<<endl;
             cout << eo << endl; 
             */
-            q_max << 2.69706, 2.0944, 2.69706, 2.0944, 2.69706, 2.0944, 3.05433;
-            q_min << -2.69706, -2.0944, -2.69706, -2.0944, -2.69706, -2.0944, -3.05433;
+            //q_max << 2.69706, 2.0944, 2.69706, 2.0944, 2.69706, 2.0944, 3.05433;
+            //q_min << -2.69706, -2.0944, -2.69706, -2.0944, -2.69706, -2.0944, -3.05433;
 
-            dq0 = dq0_limits(q, q_max, q_min);
+            //dq0 = dq0_limits(q, q_max, q_min);
 
-            e(0) = ep(0);
-            e(1) = ep(1);
-            e(2) = ep(2);
+            //e(0) = ep(0);
+            //e(1) = ep(1);
+            //e(2) = ep(2);
             /*
             e(3) = eo(0);
             e(4) = eo(1);
@@ -420,20 +478,24 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout<< "e "<< endl;
             cout << e<<endl;
             */
-            dot_xd(0) = dxd(0);
-            dot_xd(1) = dxd(1);
-            dot_xd(2) = dxd(2);
+            //dot_xd(0) = dxd(0);
+            //dot_xd(1) = dxd(1);
+            //dot_xd(2) = dxd(2);
             /*
             dot_xd(3) = w_d(0);
             dot_xd(4) = w_d(1);
             dot_xd(5) = w_d(2);
             */
 
-            q_dot = J_p_inv*(dxd + Kp*ep); //+ (Id - J_p_inv*J_p)*dq0;
+            q_dot = J_p_inv*(dz + Kp*z) +(Id - J_p_inv*J_p)*dq0;
+            //q_dot = J_p_inv*(dxd + Kp*ep) +(Id - J_p_inv*J_p)*dq0;
             //q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
 
-
+            
             q = q + q_dot*0.01;
+
+            
+
 
             cout<< "q "<<endl;
             cout<< q <<endl;
@@ -468,6 +530,14 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
                     file3<<" ";}
                 file3<<"\n";
                 file3.close();}
+            else cout<<"impossibile aprire file";
+
+            ofstream file4;
+            file4.open("w.txt",ios::out|ios::app);
+            if(file4.is_open()){
+                file4<<w_now;
+                file4<<"\n";
+                file4.close();}
             else cout<<"impossibile aprire file";
 
 
