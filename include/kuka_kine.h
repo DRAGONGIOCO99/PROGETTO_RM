@@ -45,6 +45,11 @@ class kuka_robot
         //Quaternion error
         Vector3d QuatError(Vector4d Qd, Vector4d Qe);
 
+        //From Rotation to Euler angles
+        Vector3d Rot2Euler(Matrix3d R);
+
+        Matrix3d T_euler(Vector3d Eul);
+
         float manip (Matrix6d J);
 
         float manip_Jpos (Eigen::Matrix<double, 3, 7> Jp );

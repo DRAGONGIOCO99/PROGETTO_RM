@@ -283,6 +283,41 @@ Vector3d kuka_robot::QuatError(Vector4d Qd, Vector4d Qe){
 
 }
 
+
+Vector3d kuka_robot::Rot2Euler(Matrix3d R){
+    
+    Vector3d rpy;
+
+    double app = sqrt(pow(R(2,1),2) + pow(R(2,2),2));
+
+    rpy[0] = atan2(R(1,0), R(0,0)); //phi (around z)
+    rpy[1] = atan2(-R(2,0), app);    //theta (around y)
+    rpy[2] = atan2(R(2,1), R(2,2)); //psi (around x)
+
+    return rpy;
+
+
+}
+
+Matrix3d kuka_robot::T_euler(Vector3d Eul){
+
+    Matrix3d T = Matrix3d::Zero();
+
+    T(0,0)= 0;
+    T(0,1) = -sin(Eul(0));
+    T(0,2) = cos(Eul(0))*cos(Eul(1));
+    T(1,0) = 0;
+    T(1,1) = cos(Eul(0));
+    T(1,2) = sin(Eul(0))*cos(Eul(1));
+    T(2,0) = 1;
+    T(2,1) = 0;
+    T(2,2) = -sin(Eul(1));
+
+    return T;
+}
+
+
+
 float kuka_robot::manip(Matrix6d J){
 
     float w = 0.0;
@@ -310,3 +345,5 @@ float kuka_robot::manip_Jpos (Eigen::Matrix<double, 3, 7> Jp ){
 
 
 }
+
+

@@ -73,10 +73,14 @@ int main(int argc, char** argv)
     
     Vector7d q = Vector7d::Zero();
     Matrix6d J = Matrix6d::Zero();
+    Matrix6d Ja = Matrix6d::Zero();
     Matrix4d Te = Matrix4d::Zero();
     
     Eigen::Matrix<double, 3, 7> J_p;
     J_p.setZero();
+
+    Eigen::Matrix<double, 3, 7> J_o;
+    J_o.setZero();
 
     Eigen::Matrix<double, 3, 7> J_p_inc;
     J_p_inc.setZero();
@@ -87,10 +91,21 @@ int main(int argc, char** argv)
     Eigen::Matrix<double, 7, 6> J_inv;
     J_inv.setZero();
 
-
+    Matrix3d T = Matrix3d::Zero();
     Vector7d q_data = Vector7d::Zero();
     Vector3d xd = Vector3d::Zero();
     Matrix3d R_d = Matrix3d::Zero();
+
+    R_d(0,0) = 0; 
+    R_d(0,1) = -1;
+    R_d(0,2) = 0;
+    R_d(1,0) = -1;
+    R_d(1,1) = 0;
+    R_d(1,2) = 0;
+    R_d(2,0) = 0;
+    R_d(2,1) = 0;
+    R_d(2,2) = -1;
+
     Matrix3d R_e = Matrix3d::Zero();
     Vector3d w_d = Vector3d::Zero();
     Vector3d xe = Vector3d::Zero();
@@ -101,12 +116,17 @@ int main(int argc, char** argv)
     Vector3d dz = Vector3d::Zero();
     Vector3d ddz = Vector3d::Zero();
 
+
+    Vector3d Euler_d = Vector3d::Zero();
+    Vector3d Euler_e = Vector3d::Zero();
     Vector6d e = Vector6d::Zero();
     Vector6d dot_xd = Vector6d::Zero();
-    Vector4d Q_d = Vector4d::Zero();
-    Vector4d Q_e = Vector4d::Zero();
+    //Vector4d Q_d = Vector4d::Zero();
+    //Vector4d Q_e = Vector4d::Zero();
     Vector7d q_dot = Vector7d::Zero();
     Vector3d dxd = Vector3d::Zero();
+    //Velocità terna cedevole
+    Vector3d dxt = Vector3d::Zero();
     Eigen::Matrix<double, 7, 7> Id = MatrixXd::Identity(7,7);
     Eigen::Matrix<double, 6, 6> K;
     K.setZero();
@@ -118,7 +138,7 @@ int main(int argc, char** argv)
     Vector3d he = Vector3d::Zero();
 
     // Forza costante;
-    he<<5.0,0,0;
+    he<<0,0,10.0;
 
     // Parametri controllo impedenza
 
@@ -136,9 +156,9 @@ int main(int argc, char** argv)
     Kd(2,2)=10;
 
     Eigen::Matrix<double, 3, 3> Kpa = MatrixXd::Identity(3,3);
-    Kpa(0,0)=0.2;
-    Kpa(1,1)=20;
-    Kpa(2,2)=20;
+    Kpa(0,0)=10;
+    Kpa(1,1)=10;
+    Kpa(2,2)=100;
 
     float w_inc = 0.0;
     float w_now =0.0;
@@ -352,6 +372,18 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
 
     kuka_robot kuka; 
+    //Te = kuka.Te(q_data);
+
+    //R_e = Te.block(0,0,3,3);
+    //cout<< "Re "<<endl;
+    //cout<< R_e<<endl;
+
+    //Euler = kuka.Rot2Euler(R_e);
+
+    //cout<< "Euler" << endl;
+    //cout<< Euler <<endl;
+
+
     int p=0;
 
     
@@ -393,10 +425,25 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             */
             
             Te = kuka.Te(q);
+            R_e = Te.block(0,0,3,3);
             J = kuka.jacobian(q);
+
             J_p = J.block(0,0,3,7);
-            J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
-            //J_inv = (J.transpose())*(J*J.transpose()).inverse();
+            J_o = J.block(3,0,3,7);
+
+            Euler_d = kuka.Rot2Euler(R_d);
+            Euler_e = kuka.Rot2Euler(R_e);
+            T = kuka.T_euler(Euler_e);
+
+            J_o = T.inverse()*J_o;
+
+            Ja.block(0,0,3,7) = J_p;
+            Ja.block(3,0,3,7) = J_o;
+
+
+            
+            //J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
+            J_inv = (Ja.transpose())*(Ja*Ja.transpose()).inverse();
             w_now=kuka.manip_Jpos(J_p);
 
             for (int k=0 ; k<7; k++){
@@ -423,10 +470,10 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             //Ted = kuka.Te(q_data);
             //xd <<0.5,0,0.5;
             xe = Te.block(0,3,3,1);
-            R_e = Te.block(0,0,3,3);
+            
 
-            cout << "R_e" <<endl;
-            cout << R_e <<endl;
+            //cout << "R_e" <<endl;
+            //cout << R_e <<endl;
 
             /*
             // Quaternion extraction
@@ -435,6 +482,8 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
             eo=kuka.QuatError(Q_d, Q_e);
             */
+
+            eo = Euler_d-Euler_e;
             cout << "x" << endl;
             cout << xe << endl;
 
@@ -448,15 +497,20 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
             ep = error_p(xe, xd);
 
-           cout << "ep" << endl;
-            cout << ep << endl;
+            //cout << "ep" << endl;
+            //cout << ep << endl;
 
-            z=ep;
+            //z=ep;
 
-            ddz=invMd*(he-Kd*dz-Kpa*z);
+            //ddz=invMd*(he-Kd*dz-Kpa*z);
 
-            dz=dz+0.01*ddz;
-            z = z +0.01*dz;
+            //dz=dz+0.01*ddz;
+            //z = z +0.01*dz;
+
+            //ep = xd-z-xe;
+            
+            //dxt = dz+dxd;
+
 
             /*
             cout << "\neo"<<endl;
@@ -467,29 +521,29 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
             //dq0 = dq0_limits(q, q_max, q_min);
 
-            //e(0) = ep(0);
-            //e(1) = ep(1);
-            //e(2) = ep(2);
-            /*
+            e(0) = ep(0);
+            e(1) = ep(1);
+            e(2) = ep(2);
+            
             e(3) = eo(0);
             e(4) = eo(1);
             e(5) = eo(2);
             
             cout<< "e "<< endl;
             cout << e<<endl;
-            */
-            //dot_xd(0) = dxd(0);
-            //dot_xd(1) = dxd(1);
-            //dot_xd(2) = dxd(2);
-            /*
-            dot_xd(3) = w_d(0);
-            dot_xd(4) = w_d(1);
-            dot_xd(5) = w_d(2);
-            */
+            
+            dot_xd(0) = dxd(0);
+            dot_xd(1) = dxd(1);
+            dot_xd(2) = dxd(2);
+            
+            dot_xd(3) = 0;
+            dot_xd(4) = 0;
+            dot_xd(5) = 0;
+            
 
-            q_dot = J_p_inv*(dz + Kp*z) +(Id - J_p_inv*J_p)*dq0;
+            //q_dot = J_p_inv*(dxt + Kp*ep);// +(Id - J_p_inv*J_p)*dq0;
             //q_dot = J_p_inv*(dxd + Kp*ep) +(Id - J_p_inv*J_p)*dq0;
-            //q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
+            q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
 
             
             q = q + q_dot*0.01;
