@@ -11,10 +11,10 @@
 #include <sstream>
 #include <stdio.h>
 
-#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/rl_ros1/src/PROGETTO_RM/include/kuka_kine.h"
 
 using namespace Eigen;
-#define n_rigXD 2800
+#define n_rigXD 3200
 #define num_traj 7
 #define n_rigR 12003
 #define n_col 3
@@ -121,8 +121,8 @@ int main(int argc, char** argv)
     Vector3d Euler_e = Vector3d::Zero();
     Vector6d e = Vector6d::Zero();
     Vector6d dot_xd = Vector6d::Zero();
-    //Vector4d Q_d = Vector4d::Zero();
-    //Vector4d Q_e = Vector4d::Zero();
+    Vector4d Q_d = Vector4d::Zero();
+    Vector4d Q_e = Vector4d::Zero();
     Vector7d q_dot = Vector7d::Zero();
     Vector3d dxd = Vector3d::Zero();
     //Velocità terna cedevole
@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 
     cout <<"Home configuration setted\n"<<endl;
 
-    ifstream file1("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd.txt",ios::in);
+    ifstream file1("/home/dev/rl_ros1/src/PROGETTO_RM/src/Xd.txt",ios::in);
     if(!file1){
     cout<<"errore"<<endl;
         }
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
     }
 
 
-ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
+ifstream file2("/home/dev/rl_ros1/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
     if(!file2){
     cout<<"errore"<<endl;
     }
@@ -431,7 +431,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             J_p = J.block(0,0,3,7);
             J_o = J.block(3,0,3,7);
 
-            Euler_d = kuka.Rot2Euler(R_d);
+            Euler_d = kuka.Rot2Euler(R_e);
             Euler_e = kuka.Rot2Euler(R_e);
             T = kuka.T_euler(Euler_e);
 
@@ -475,13 +475,13 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             //cout << "R_e" <<endl;
             //cout << R_e <<endl;
 
-            /*
+            
             // Quaternion extraction
-            Q_d = kuka.Rot2Quat(R_d);
-            Q_e = kuka.Rot2Quat(R_e);
+           // Q_d = kuka.Rot2Quat(R_e);
+            //Q_e = kuka.Rot2Quat(R_e);
 
-            eo=kuka.QuatError(Q_d, Q_e);
-            */
+            //eo=kuka.QuatError(Q_d, Q_e);
+            
 
             eo = Euler_d-Euler_e;
             cout << "x" << endl;
