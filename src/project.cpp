@@ -11,7 +11,7 @@
 #include <sstream>
 #include <stdio.h>
 
-#include "/home/dev/rl_ros1/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
 
 using namespace Eigen;
 #define n_rigXD 3200
@@ -67,12 +67,13 @@ int main(int argc, char** argv)
 
     std::vector<Vector3d> Pd(n_rigXD);
     std::vector<Vector3d> dot_Pd(n_rigXD);
-    std::vector<Vector3d> wd(n_rigXD);
-    std::vector<Matrix3d> Rd(n_rigXD);
+    //std::vector<Vector3d> wd(n_rigXD);
+    //std::vector<Matrix3d> Rd(n_rigXD);
     
     
     Vector7d q = Vector7d::Zero();
     Matrix6d J = Matrix6d::Zero();
+    Matrix6d J_inc = Matrix6d::Zero();
     Matrix6d Ja = Matrix6d::Zero();
     Matrix4d Te = Matrix4d::Zero();
     
@@ -82,51 +83,39 @@ int main(int argc, char** argv)
     Eigen::Matrix<double, 3, 7> J_o;
     J_o.setZero();
 
-    Eigen::Matrix<double, 3, 7> J_p_inc;
-    J_p_inc.setZero();
-
     Eigen::Matrix<double, 7, 3> J_p_inv;
     J_p_inv.setZero();
    
     Eigen::Matrix<double, 7, 6> J_inv;
     J_inv.setZero();
 
+    //Transformation matrix for euler angles
     Matrix3d T = Matrix3d::Zero();
     Vector7d q_data = Vector7d::Zero();
-    Vector3d xd = Vector3d::Zero();
-    Matrix3d R_d = Matrix3d::Zero();
-
-    R_d(0,0) = 0; 
-    R_d(0,1) = -1;
-    R_d(0,2) = 0;
-    R_d(1,0) = -1;
-    R_d(1,1) = 0;
-    R_d(1,2) = 0;
-    R_d(2,0) = 0;
-    R_d(2,1) = 0;
-    R_d(2,2) = -1;
+    Vector6d xd = Vector6d::Zero();
+    //Matrix3d R_d = Matrix3d::Zero();
 
     Matrix3d R_e = Matrix3d::Zero();
-    Vector3d w_d = Vector3d::Zero();
-    Vector3d xe = Vector3d::Zero();
+    //Vector3d w_d = Vector3d::Zero();
+    Vector6d xe = Vector6d::Zero();
     Vector3d ep = Vector3d::Zero();
     Vector3d eo = Vector3d::Zero();
 
-    Vector3d z = Vector3d::Zero();
-    Vector3d dz = Vector3d::Zero();
-    Vector3d ddz = Vector3d::Zero();
+    Vector6d z = Vector6d::Zero();
+    Vector6d dz = Vector6d::Zero();
+    Vector6d ddz = Vector6d::Zero();
 
 
     Vector3d Euler_d = Vector3d::Zero();
     Vector3d Euler_e = Vector3d::Zero();
     Vector6d e = Vector6d::Zero();
-    Vector6d dot_xd = Vector6d::Zero();
-    Vector4d Q_d = Vector4d::Zero();
-    Vector4d Q_e = Vector4d::Zero();
+   
+    //Vector4d Q_d = Vector4d::Zero();
+    //Vector4d Q_e = Vector4d::Zero();
     Vector7d q_dot = Vector7d::Zero();
-    Vector3d dxd = Vector3d::Zero();
+    Vector6d dxd = Vector6d::Zero();
     //Velocità terna cedevole
-    Vector3d dxt = Vector3d::Zero();
+    Vector6d dxt = Vector6d::Zero();
     Eigen::Matrix<double, 7, 7> Id = MatrixXd::Identity(7,7);
     Eigen::Matrix<double, 6, 6> K;
     K.setZero();
@@ -135,35 +124,51 @@ int main(int argc, char** argv)
 
     Vector7d q_inc = Vector7d::Zero();
     
-    Vector3d he = Vector3d::Zero();
 
-    // Forza costante;
-    he<<0,0,10.0;
+    Vector6d he = Vector6d::Zero();
 
-    // Parametri controllo impedenza
+    // Forza costante
+    he<<0,5,0,0,0,0;
 
-    Eigen::Matrix<double, 3, 3> Md = MatrixXd::Identity(3,3);
+    // Torque costante
+    //he<<0,0,0,0,2,0;
+
+
+    // Parametri controllo ammettenza
+
+    Eigen::Matrix<double, 6, 6> Md = MatrixXd::Identity(6,6);
+    //Md(4,4)=50;
     //DiagonalMatrix<float,3,3> Md;
    
     
-    Matrix<double,3,3> invMd;
+    Matrix<double,6,6> invMd;
     invMd = Md.inverse();
     
     
-    Eigen::Matrix<double, 3, 3> Kd = MatrixXd::Identity(3,3);
-    Kd(0,0)=30;
+    Eigen::Matrix<double, 6, 6> Kd = MatrixXd::Identity(6,6);
+    Kd(0,0)=10;
     Kd(1,1)=10;
     Kd(2,2)=10;
+    Kd(3,3)=10;
+    Kd(4,4)=10;
+    Kd(5,5)=10;
 
-    Eigen::Matrix<double, 3, 3> Kpa = MatrixXd::Identity(3,3);
+    Eigen::Matrix<double, 6, 6> Kpa = MatrixXd::Identity(6,6);
     Kpa(0,0)=10;
-    Kpa(1,1)=10;
-    Kpa(2,2)=100;
+    Kpa(1,1)=100;
+    Kpa(2,2)=10;
+    Kpa(3,3)=10;
+    Kpa(4,4)=10;
+    Kpa(5,5)=10;
 
     float w_inc = 0.0;
     float w_now =0.0;
+
     double Kp = 20;
-    double k0 = 5;
+    
+    double k0 = 10;
+
+    //Gain click
     K(0,0) = 100;
     K(1,1) = 100;
     K(2,2) = 100;
@@ -191,7 +196,7 @@ int main(int argc, char** argv)
 
     cout <<"Home configuration setted\n"<<endl;
 
-    ifstream file1("/home/dev/rl_ros1/src/PROGETTO_RM/src/Xd.txt",ios::in);
+    ifstream file1("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd.txt",ios::in);
     if(!file1){
     cout<<"errore"<<endl;
         }
@@ -200,7 +205,7 @@ int main(int argc, char** argv)
         for(int i=0;i<n_rigXD;i++){
             for(int j=0;j<n_col;j++){
                 file1>>Pd[i](j);
-                cout<<"sto salvando i dati"<<endl;
+                //cout<<"sto salvando i dati"<<endl;
             }
         }
 
@@ -209,7 +214,7 @@ int main(int argc, char** argv)
     }
 
 
-ifstream file2("/home/dev/rl_ros1/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
+ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
     if(!file2){
     cout<<"errore"<<endl;
     }
@@ -217,7 +222,7 @@ ifstream file2("/home/dev/rl_ros1/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
         for(int i=0;i<n_rigXD;i++){
           for(int j=0;j<n_col;j++){
              file2>>dot_Pd[i](j);
-             cout<<"sto salvando i dati"<<endl;
+             //cout<<"sto salvando i dati"<<endl;
           }
        }
     }
@@ -407,13 +412,19 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout<< q <<endl;
 
             
-            xd(0)=Pd[p](0);
-            xd(1)=Pd[p](1);
-            xd(2)=Pd[p](2);
+            xd(0) = Pd[p](0);
+            xd(1) = Pd[p](1);
+            xd(2) = Pd[p](2);
 
-            dxd(0)=dot_Pd[p](0);
-            dxd(1)=dot_Pd[p](1);
-            dxd(2)=dot_Pd[p](2);
+            dxd(0) = dot_Pd[p](0);
+            dxd(1) = dot_Pd[p](1);
+            dxd(2) = dot_Pd[p](2);
+            dxd(3) = 0;
+            dxd(4) = 0;
+            dxd(5) = 0;
+
+            //Forza sinusoidale
+            //he(0)=20*sin(p/0.01);
 
             /*
             R_d = Rd[p];
@@ -431,6 +442,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             J_p = J.block(0,0,3,7);
             J_o = J.block(3,0,3,7);
 
+            //orientamento fisso e pari a quello iniziale
             Euler_d = kuka.Rot2Euler(R_e);
             Euler_e = kuka.Rot2Euler(R_e);
             T = kuka.T_euler(Euler_e);
@@ -444,14 +456,14 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             
             //J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
             J_inv = (Ja.transpose())*(Ja*Ja.transpose()).inverse();
-            w_now=kuka.manip_Jpos(J_p);
+            w_now = kuka.manip(J);
 
             for (int k=0 ; k<7; k++){
                 q_inc=q;
                 q_inc(k) = q_inc(k)+0.01;
-                J = kuka.jacobian(q_inc);
-                J_p_inc = J.block(0,0,3,7);
-                w_inc = kuka.manip_Jpos(J_p_inc);
+                J_inc = kuka.jacobian(q_inc);
+                
+                w_inc = kuka.manip(J_inc);
                 grad_w(k)=(w_inc-w_now)/0.01;
             }
     
@@ -469,9 +481,17 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
             //Ted = kuka.Te(q_data);
             //xd <<0.5,0,0.5;
-            xe = Te.block(0,3,3,1);
-            
+            //xe = Te.block(0,3,3,1);
+            xe(0) = Te(0,3);
+            xe(1) = Te(1,3);
+            xe(2) = Te(2,3);
+            xe(3) = Euler_e(0);
+            xe(4) = Euler_e(1);
+            xe(5) = Euler_e(2);
 
+            xd(3) = Euler_d(0);
+            xd(4) = Euler_d(1);
+            xd(5) = Euler_d(2);
             //cout << "R_e" <<endl;
             //cout << R_e <<endl;
 
@@ -483,7 +503,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             //eo=kuka.QuatError(Q_d, Q_e);
             
 
-            eo = Euler_d-Euler_e;
+            //eo = Euler_d-Euler_e;
             cout << "x" << endl;
             cout << xe << endl;
 
@@ -495,32 +515,30 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout << "xd" << endl;
             cout << xd << endl;
 
-            ep = error_p(xe, xd);
+            //ep = error_p(xe, xd);
 
             //cout << "ep" << endl;
             //cout << ep << endl;
 
-            //z=ep;
 
-            //ddz=invMd*(he-Kd*dz-Kpa*z);
 
-            //dz=dz+0.01*ddz;
-            //z = z +0.01*dz;
+            ddz=invMd*(he-Kd*dz-Kpa*z);
 
-            //ep = xd-z-xe;
+            dz=dz+0.01*ddz;
+            z = z +0.01*dz;
+
+            e = xd-z-xe;
             
-            //dxt = dz+dxd;
+            dxt = dz+dxd;
 
 
             /*
             cout << "\neo"<<endl;
             cout << eo << endl; 
-            */
-            //q_max << 2.69706, 2.0944, 2.69706, 2.0944, 2.69706, 2.0944, 3.05433;
-            //q_min << -2.69706, -2.0944, -2.69706, -2.0944, -2.69706, -2.0944, -3.05433;
+          
 
-            //dq0 = dq0_limits(q, q_max, q_min);
 
+            /*
             e(0) = ep(0);
             e(1) = ep(1);
             e(2) = ep(2);
@@ -528,22 +546,16 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             e(3) = eo(0);
             e(4) = eo(1);
             e(5) = eo(2);
-            
+            */
+
             cout<< "e "<< endl;
-            cout << e<<endl;
+            cout << e <<endl;
             
-            dot_xd(0) = dxd(0);
-            dot_xd(1) = dxd(1);
-            dot_xd(2) = dxd(2);
-            
-            dot_xd(3) = 0;
-            dot_xd(4) = 0;
-            dot_xd(5) = 0;
-            
+
 
             //q_dot = J_p_inv*(dxt + Kp*ep);// +(Id - J_p_inv*J_p)*dq0;
             //q_dot = J_p_inv*(dxd + Kp*ep) +(Id - J_p_inv*J_p)*dq0;
-            q_dot = J_inv*(dot_xd + K*e); //+ (Id - J_inv*J)*dq0;
+            q_dot = J_inv*(dxt + K*e) ;//+ (Id - J_inv*Ja)*dq0;
 
             
             q = q + q_dot*0.01;
@@ -559,7 +571,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             file1.open("ERRORE_CLIK_pos.txt",ios::out|ios::app);
             if(file1.is_open()){
                 for(int i=0;i<3;i++){
-                    file1<<ep(i);
+                    file1<<z(i);
                     file1<<" ";}
                 file1<<"\n";
                 file1.close();}
@@ -592,6 +604,16 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
                 file4<<w_now;
                 file4<<"\n";
                 file4.close();}
+            else cout<<"impossibile aprire file";
+
+            ofstream file5;
+            file5.open("he.txt",ios::out|ios::app);
+            if(file5.is_open()){
+                for(int i=0;i<6;i++){
+                    file5<<he(i);
+                    file5<<" ";}
+                    file5<<"\n";
+                file5.close();}
             else cout<<"impossibile aprire file";
 
 
