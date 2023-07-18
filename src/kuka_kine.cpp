@@ -203,27 +203,27 @@ Vector4d kuka_robot::Rot2Quat(Matrix3d R){
     double argument3 = -R(0,0) - R(1,1) + R(2,2) + 1.0;
 
     if(argument1 < 0.0 && argument1 > -pow(10,-12)){
-   //     cout<<"WARNING: argument1 in function 'rot2quat' is negative and near zero: -10^(-12) < argument1 < 0"<<endl;
+  
         argument1 = 0.0;
     }
     else if(argument1 < -pow(10,-12)){
-     //   cout<<"WARNING: argument1 in function 'rot2quat' is negative and NOT near zero: argument1 < -10^(-12)"<<endl;
+     
         argument1 = 0.0;
     }
     if(argument2 < 0.0 && argument2 > -pow(10,-12)){
-       // cout<<"WARNING: argument2 in function 'rot2quat' is negative and near zero: -10^(-12) < argument2 < 0"<<endl;
+       
         argument2 = 0.0;
     }
     else if(argument2 < -pow(10,-12)){
-        //cout<<"WARNING: argument2 in function 'rot2quat' is negative and NOT near zero: argument2 < -10^(-12)"<<endl;
+        
         argument2 = 0.0;
     }
     if(argument3 < 0.0 && argument3 > -pow(10,-12)){
-      //  cout<<"WARNING: argument3 in function 'rot2quat' is negative and near zero: -10^(-12) < argument3 < 0"<<endl;
+      
         argument3 = 0.0;
     }
     else if(argument3 < -pow(10,-12)){
-      //  cout<<"WARNING: argument3 in function 'rot2quat' is negative and NOT near zero: argument3 < -10^(-12)"<<endl;
+    
         argument3 = 0.0;
     }
 
@@ -342,19 +342,6 @@ float kuka_robot::manip(Matrix6d J){
 
 }
 
-float kuka_robot::manip_Jpos (Eigen::Matrix<double, 3, 7> Jp ){
 
-    float w = 0.0;
-    float w_not_sq= 0.0;
-
-    w_not_sq=(Jp*Jp.transpose()).determinant();
-
-    w=sqrt(w_not_sq);
-
-    return w;
-
-
-
-}
 
 

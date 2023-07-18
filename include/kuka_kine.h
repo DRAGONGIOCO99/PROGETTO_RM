@@ -17,7 +17,7 @@ typedef Eigen::Matrix<double, 7, 1> Vector7d;
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 6, 7> Matrix6d;
 typedef Eigen::Matrix<double, 7, 4> Matrix_7_4;
-//typedef Eigen::Matrix<double, 4, 1> Vector4d;
+
 
 
 class kuka_robot
@@ -47,11 +47,11 @@ class kuka_robot
 
         //From Rotation to Euler angles
         Vector3d Rot2Euler(Matrix3d R);
-
+        
+        //Transformation matrix for Euler angles
         Matrix3d T_euler(Vector3d Eul);
 
         float manip (Matrix6d J);
 
-        float manip_Jpos (Eigen::Matrix<double, 3, 7> Jp );
         
 };

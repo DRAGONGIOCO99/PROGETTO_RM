@@ -32,17 +32,6 @@ Vector3d error_p (Vector3d &x, Vector3d &xd)
     return error;
 }
 
-/*Vector7d dq0_limits(Vector7d &q, Vector7d &q_max, Vector7d &q_min)
-{
-    Vector7d w = Vector7d::Zero();
-
-    for (unsigned i=0; i<7; i++){
-        w[i] = 2*q(i) / ((q_max(i) - q_min(i))*(q_max(i) - q_min(i)));
-    }
-
-    return w;
-
-}*/
 
 
 
@@ -93,16 +82,19 @@ int main(int argc, char** argv)
     Matrix3d T = Matrix3d::Zero();
     Vector7d q_data = Vector7d::Zero();
     Vector6d xd = Vector6d::Zero();
+    Vector3d xdp = Vector3d::Zero();
     //Matrix3d R_d = Matrix3d::Zero();
 
     Matrix3d R_e = Matrix3d::Zero();
     //Vector3d w_d = Vector3d::Zero();
     Vector6d xe = Vector6d::Zero();
+    Vector3d xep = Vector3d::Zero();
     Vector3d ep = Vector3d::Zero();
-    Vector3d eo = Vector3d::Zero();
+    //Vector3d eo = Vector3d::Zero();
 
     Vector6d z = Vector6d::Zero();
     Vector6d dz = Vector6d::Zero();
+    Vector6d dz_old = Vector6d::Zero();
     Vector6d ddz = Vector6d::Zero();
 
 
@@ -114,24 +106,28 @@ int main(int argc, char** argv)
     //Vector4d Q_e = Vector4d::Zero();
     Vector7d q_dot = Vector7d::Zero();
     Vector6d dxd = Vector6d::Zero();
+
     //Velocità terna cedevole
     Vector6d dxt = Vector6d::Zero();
+
     Eigen::Matrix<double, 7, 7> Id = MatrixXd::Identity(7,7);
     Eigen::Matrix<double, 6, 6> K;
     K.setZero();
+
     Vector7d dq0 = Vector7d::Zero();
     Vector7d grad_w = Vector7d::Zero();
 
     Vector7d q_inc = Vector7d::Zero();
     
-
+    std::vector<double> he_sin(n_rigXD);
     Vector6d he = Vector6d::Zero();
+    
 
     // Forza costante
     he<<0,5,0,0,0,0;
 
     // Torque costante
-    //he<<0,0,0,0,2,0;
+    //he<<0,0,0,0,0,2;
 
 
     // Parametri controllo ammettenza
@@ -147,7 +143,7 @@ int main(int argc, char** argv)
     
     Eigen::Matrix<double, 6, 6> Kd = MatrixXd::Identity(6,6);
     Kd(0,0)=10;
-    Kd(1,1)=10;
+    Kd(1,1)=100;
     Kd(2,2)=10;
     Kd(3,3)=10;
     Kd(4,4)=10;
@@ -155,7 +151,7 @@ int main(int argc, char** argv)
 
     Eigen::Matrix<double, 6, 6> Kpa = MatrixXd::Identity(6,6);
     Kpa(0,0)=10;
-    Kpa(1,1)=100;
+    Kpa(1,1)=500;
     Kpa(2,2)=10;
     Kpa(3,3)=10;
     Kpa(4,4)=10;
@@ -224,6 +220,17 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
              file2>>dot_Pd[i](j);
              //cout<<"sto salvando i dati"<<endl;
           }
+       }
+    }
+
+    ifstream file3("/home/dev/ros1_ws/src/PROGETTO_RM/src/he_sin.txt",ios::in);
+    if(!file3){
+    cout<<"errore"<<endl;
+    }
+    else{
+        for(int i=0;i<n_rigXD;i++){
+             file3>>he_sin[i];
+
        }
     }
     
@@ -424,7 +431,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             dxd(5) = 0;
 
             //Forza sinusoidale
-            //he(0)=20*sin(p/0.01);
+            //he(0)=he_sin[p];
 
             /*
             R_d = Rd[p];
@@ -515,7 +522,10 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout << "xd" << endl;
             cout << xd << endl;
 
-            //ep = error_p(xe, xd);
+            xep = xe.head(3);
+            xdp = xd.head(3);
+
+            ep = error_p(xep, xdp);
 
             //cout << "ep" << endl;
             //cout << ep << endl;
@@ -527,11 +537,13 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             dz=dz+0.01*ddz;
             z = z +0.01*dz;
 
+            
+
             e = xd-z-xe;
             
             dxt = dz+dxd;
 
-
+           
             /*
             cout << "\neo"<<endl;
             cout << eo << endl; 
@@ -555,7 +567,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
             //q_dot = J_p_inv*(dxt + Kp*ep);// +(Id - J_p_inv*J_p)*dq0;
             //q_dot = J_p_inv*(dxd + Kp*ep) +(Id - J_p_inv*J_p)*dq0;
-            q_dot = J_inv*(dxt + K*e) ;//+ (Id - J_inv*Ja)*dq0;
+            q_dot = J_inv*(dxt + K*e) + (Id - J_inv*Ja)*dq0;
 
             
             q = q + q_dot*0.01;
@@ -568,16 +580,17 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
 
             ofstream file1;
-            file1.open("ERRORE_CLIK_pos.txt",ios::out|ios::app);
+            file1.open("xde.txt",ios::out|ios::app);
             if(file1.is_open()){
                 for(int i=0;i<3;i++){
-                    file1<<z(i);
+                    file1<<ep(i);
                     file1<<" ";}
                 file1<<"\n";
                 file1.close();}
             else cout<<"impossibile aprire file";
 
-                        ofstream file2;
+            
+            ofstream file2;
             file2.open("xe.txt",ios::out|ios::app);
             if(file2.is_open()){
                 for(int i=0;i<3;i++){
@@ -614,6 +627,17 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
                     file5<<" ";}
                     file5<<"\n";
                 file5.close();}
+            else cout<<"impossibile aprire file";
+            
+
+            ofstream file6;
+            file6.open("e.txt",ios::out|ios::app);
+            if(file6.is_open()){
+                for(int i=0;i<6;i++){
+                    file6<<e(i);
+                    file6<<" ";}
+                file6<<"\n";
+                file6.close();}
             else cout<<"impossibile aprire file";
 
 
