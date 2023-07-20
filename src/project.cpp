@@ -56,8 +56,7 @@ int main(int argc, char** argv)
 
     std::vector<Vector3d> Pd(n_rigXD);
     std::vector<Vector3d> dot_Pd(n_rigXD);
-    //std::vector<Vector3d> wd(n_rigXD);
-    //std::vector<Matrix3d> Rd(n_rigXD);
+ 
     
     
     Vector7d q = Vector7d::Zero();
@@ -83,14 +82,14 @@ int main(int argc, char** argv)
     Vector7d q_data = Vector7d::Zero();
     Vector6d xd = Vector6d::Zero();
     Vector3d xdp = Vector3d::Zero();
-    //Matrix3d R_d = Matrix3d::Zero();
+    
 
     Matrix3d R_e = Matrix3d::Zero();
-    //Vector3d w_d = Vector3d::Zero();
+
     Vector6d xe = Vector6d::Zero();
     Vector3d xep = Vector3d::Zero();
     Vector3d ep = Vector3d::Zero();
-    //Vector3d eo = Vector3d::Zero();
+   
 
     Vector6d z = Vector6d::Zero();
     Vector6d dz = Vector6d::Zero();
@@ -102,8 +101,7 @@ int main(int argc, char** argv)
     Vector3d Euler_e = Vector3d::Zero();
     Vector6d e = Vector6d::Zero();
    
-    //Vector4d Q_d = Vector4d::Zero();
-    //Vector4d Q_e = Vector4d::Zero();
+
     Vector7d q_dot = Vector7d::Zero();
     Vector6d dxd = Vector6d::Zero();
 
@@ -133,8 +131,7 @@ int main(int argc, char** argv)
     // Parametri controllo ammettenza
 
     Eigen::Matrix<double, 6, 6> Md = MatrixXd::Identity(6,6);
-    //Md(4,4)=50;
-    //DiagonalMatrix<float,3,3> Md;
+    
    
     
     Matrix<double,6,6> invMd;
@@ -159,8 +156,8 @@ int main(int argc, char** argv)
 
     float w_inc = 0.0;
     float w_now =0.0;
-
-    double Kp = 20;
+    
+ 
     
     double k0 = 10;
 
@@ -234,166 +231,10 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
        }
     }
     
-    /*
-    ifstream file3("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_01d.txt",ios::in);
-    if(!file3){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=0;i<n_rigR/3;i++){
-          for(int j=0;j<n_col;j++){
-             file3>>Rd[i](j,0);
-             file3>>Rd[i](j,1);
-             file3>>Rd[i](j,2);
-             cout<<"sto salvando i dati"<<endl;
-          }
-       }
-    }
-    */
-
-    /*
-    
-    ifstream file4("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_12d.txt",ios::in);
-    if(!file4){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=n_rigR/3;i<2*n_rigR/3;i++){
-          for(int j=0;j<n_col;j++){
-             file4>>Rd[i](j,0);
-             file4>>Rd[i](j,1);
-             file4>>Rd[i](j,2);
-             cout<<"sto salvando i dati"<<endl;
-          }
-  
-       }
-    }
-    
-    */
-
-    /*
- ifstream file5("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_23d.txt",ios::in);
-    if(!file5){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=2*n_rigR/3;i<3*n_rigR/3;i++){
-          for(int j=0;j<n_col;j++){
-             file5>>Rd[i](j,0);
-             file5>>Rd[i](j,1);
-             file5>>Rd[i](j,2);
-             cout<<"sto salvando i dati"<<endl;
-          }
-  
-       }
-    }
-
-    */
-
-    /*
-
-for(int i=3*n_rigR/3;i<4*n_rigR/3;i++){
-            Rd[i] =Rd[3*n_rigR/3-1];
-          }
-    
-ifstream file6("/home/dev/ros1_ws/src/PROGETTO_RM/src/R_45d.txt",ios::in);
-    if(!file6){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=4*n_rigR/3;i<5*n_rigR/3;i++){
-          for(int j=0;j<n_col;j++){
-             file6>>Rd[i](j,0);
-             file6>>Rd[i](j,1);
-             file6>>Rd[i](j,2);
-             cout<<"sto salvando i dati"<<endl;
-          }
-  
-       }
-    }
-
-    */
-  
- /*
-for(int i=5*n_rigR/3;i<7*n_rigR/3;i++){
-            Rd[i] =Rd[5*n_rigR/3-1];
-          }
-
-
-
-ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
-    if(!file7){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=0;i<n_rigXD/num_traj;i++){
-          for(int j=0;j<n_col;j++){
-             file7>>wd[i](j);
-             cout<<"sto salvando i dati"<<endl;
-          }
-       }
-    }
-    ifstream file8("/home/dev/ros1_ws/src/PROGETTO_RM/src/w2.txt",ios::in);
-    if(!file8){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=n_rigXD/num_traj;i<2*n_rigXD/num_traj;i++){
-          for(int j=0;j<n_col;j++){
-             file8>>wd[i](j);
-             cout<<"sto salvando i dati"<<endl;
-          }
-       }
-    }
-    
-    ifstream file9("/home/dev/ros1_ws/src/PROGETTO_RM/src/w3.txt",ios::in);
-    if(!file9){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=2*n_rigXD/num_traj;i<3*n_rigXD/num_traj;i++){
-          for(int j=0;j<n_col;j++){
-             file9>>wd[i](j);
-             cout<<"sto salvando i dati"<<endl;
-          }
-       }
-    }
-    for(int i=3*n_rigXD/num_traj;i<4*n_rigXD/num_traj;i++){
-            wd[i]=wd[3*n_rigXD/num_traj-1] ;
-            cout<<"sto salvando i dati"<<endl;
-          }
-    ifstream file10("/home/dev/ros1_ws/src/PROGETTO_RM/src/w4.txt",ios::in);
-    if(!file10){
-    cout<<"errore"<<endl;
-    }
-    else{
-        for(int i=4*n_rigXD/num_traj;i<5*n_rigXD/num_traj;i++){
-          for(int j=0;j<n_col;j++){
-             file10>>wd[i](j);
-             cout<<"sto salvando i dati"<<endl;
-          }
-       }
-    }
-    for(int i=5*n_rigXD/num_traj;i<7*n_rigXD/num_traj;i++){
-            wd[i]=wd[5*n_rigXD/num_traj-1] ;
-            cout<<"sto salvando i dati"<<endl;
-            cout << wd[i]<<endl;
-          
-          }
-*/
 
 
     kuka_robot kuka; 
-    //Te = kuka.Te(q_data);
 
-    //R_e = Te.block(0,0,3,3);
-    //cout<< "Re "<<endl;
-    //cout<< R_e<<endl;
-
-    //Euler = kuka.Rot2Euler(R_e);
-
-    //cout<< "Euler" << endl;
-    //cout<< Euler <<endl;
 
 
     int p=0;
@@ -433,14 +274,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             //Forza sinusoidale
             //he(0)=he_sin[p];
 
-            /*
-            R_d = Rd[p];
-            cout << "R_d" <<endl;
-            cout << R_d <<endl;
-            w_d(0) = wd[p](0);
-            w_d(1) = wd[p](1);
-            w_d(2) = wd[p](2);
-            */
+
             
             Te = kuka.Te(q);
             R_e = Te.block(0,0,3,3);
@@ -461,7 +295,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
 
 
             
-            //J_p_inv = (J_p.transpose())*(J_p*J_p.transpose()).inverse();
+           
             J_inv = (Ja.transpose())*(Ja*Ja.transpose()).inverse();
             w_now = kuka.manip(J);
 
@@ -478,17 +312,11 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             //cout<<w_now<<endl;
             dq0 = k0*grad_w;
 
-            cout <<" dq0 "<<endl;
-            cout << dq0 <<endl;
-            /*cout << "Te" << endl;
-            cout << Te << endl;
-            cout << "Jacobian" << endl;
-            cout << J << endl;*/
+            //cout <<" dq0 "<<endl;
+            //cout << dq0 <<endl;
+ 
 
-
-            //Ted = kuka.Te(q_data);
-            //xd <<0.5,0,0.5;
-            //xe = Te.block(0,3,3,1);
+  
             xe(0) = Te(0,3);
             xe(1) = Te(1,3);
             xe(2) = Te(2,3);
@@ -499,25 +327,12 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             xd(3) = Euler_d(0);
             xd(4) = Euler_d(1);
             xd(5) = Euler_d(2);
-            //cout << "R_e" <<endl;
-            //cout << R_e <<endl;
-
-            
-            // Quaternion extraction
-           // Q_d = kuka.Rot2Quat(R_e);
-            //Q_e = kuka.Rot2Quat(R_e);
-
-            //eo=kuka.QuatError(Q_d, Q_e);
-            
+         
 
             //eo = Euler_d-Euler_e;
             cout << "x" << endl;
             cout << xe << endl;
 
-            /*cout << "TE " << endl;
-            cout << Te <<endl;
-            cout << " Re "<<endl;
-            cout << Te.block(0,0,3,3) <<endl;*/
 
             cout << "xd" << endl;
             cout << xd << endl;
@@ -544,29 +359,15 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             dxt = dz+dxd;
 
            
-            /*
-            cout << "\neo"<<endl;
-            cout << eo << endl; 
-          
+       
 
 
-            /*
-            e(0) = ep(0);
-            e(1) = ep(1);
-            e(2) = ep(2);
-            
-            e(3) = eo(0);
-            e(4) = eo(1);
-            e(5) = eo(2);
-            */
+        
 
             cout<< "e "<< endl;
             cout << e <<endl;
             
 
-
-            //q_dot = J_p_inv*(dxt + Kp*ep);// +(Id - J_p_inv*J_p)*dq0;
-            //q_dot = J_p_inv*(dxd + Kp*ep) +(Id - J_p_inv*J_p)*dq0;
             q_dot = J_inv*(dxt + K*e) + (Id - J_inv*Ja)*dq0;
 
             
@@ -579,6 +380,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             cout<< q <<endl;
 
 
+            // saving output files
             ofstream file1;
             file1.open("xde.txt",ios::out|ios::app);
             if(file1.is_open()){
@@ -641,18 +443,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             else cout<<"impossibile aprire file";
 
 
-            /*
-            ofstream file2;
-            file2.open("ERRORE_CLIK_or.txt",ios::out|ios::app);
-            if(file2.is_open()){
-                for(int i=0;i<3;i++){
-                    file2<<eo(i);
-                    file2<<" ";}
-                file2<<"\n";
-                file2.close();}
-            else cout<<"impossibile aprire file";
-
-            */
+     
                 
             for(int i=0; i<7; i++){
                 q_cmd[i].data = q[i];
@@ -663,6 +454,7 @@ ifstream file7("/home/dev/ros1_ws/src/PROGETTO_RM/src/w1.txt",ios::in);
             p++;
         }
     }
+    cout<<"Trajectory ended!"<<endl;
 
     return 0;
 }
