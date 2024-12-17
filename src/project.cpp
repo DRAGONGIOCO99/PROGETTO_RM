@@ -3,6 +3,7 @@
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/Pose.h>
 #include "std_msgs/Float64.h"
+#include <string> // Per std::string
 
 #include <tf/transform_broadcaster.h>
 
@@ -11,9 +12,11 @@
 #include <sstream>
 #include <stdio.h>
 
-#include "/home/dev/ros1_ws/src/PROGETTO_RM/include/kuka_kine.h"
+#include "/home/dev/ros1_GB/src/PROGETTO_RM/include/kuka_kine.h"
+std::string folder = "/home/dev/ros1_GB/src/PROGETTO_RM/src/" ;
 
 using namespace Eigen;
+
 #define n_rigXD 3200
 #define num_traj 7
 #define n_rigR 12003
@@ -189,7 +192,7 @@ int main(int argc, char** argv)
 
     cout <<"Home configuration setted\n"<<endl;
 
-    ifstream file1("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd.txt",ios::in);
+    ifstream file1(folder+"Xd.txt",ios::in);
     if(!file1){
     cout<<"errore"<<endl;
         }
@@ -207,7 +210,7 @@ int main(int argc, char** argv)
     }
 
 
-ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
+ifstream file2(folder+"Xd_dot.txt",ios::in);
     if(!file2){
     cout<<"errore"<<endl;
     }
@@ -220,7 +223,7 @@ ifstream file2("/home/dev/ros1_ws/src/PROGETTO_RM/src/Xd_dot.txt",ios::in);
        }
     }
 
-    ifstream file3("/home/dev/ros1_ws/src/PROGETTO_RM/src/he_sin.txt",ios::in);
+    ifstream file3(folder+"he_sin.txt",ios::in);
     if(!file3){
     cout<<"errore"<<endl;
     }
